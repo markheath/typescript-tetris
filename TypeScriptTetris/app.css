@@ -13,6 +13,11 @@ span {
     background-color: cornflowerblue;
 }
 
+.instructions {
+    margin: 8px;
+    float: left;
+}
+
 #gameCanvas {
     height: 360px;
     width: 240px;

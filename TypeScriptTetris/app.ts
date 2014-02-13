@@ -471,12 +471,13 @@ class Game {
         this.rowsCompleted = 0;
         this.score = 0;
         this.level = -1;
-        this.incrementLevel();
-        this.updateLabels();
+        this.speed = 1000;
         this.phase = Game.gameState.playing;
+        // kick off the render loop
         requestAnimFrame((function (self) {
             return function () { self.draw(); };
         })(this));
+        this.incrementLevel(); // will start the game timer & update the labels
     }
 
     private updateLabels() {
@@ -535,21 +536,14 @@ class Game {
 
         if (event.keyCode == 113) { // F2
             this.newGame();
-            // loop drawScene
-
-            // strange code required to get the right 'this' pointer on callbacks
-            // http://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
-            this.timerToken = setInterval((function (self) {
-                return function () { self.gameTimer(); };
-            })(this), this.speed);
         }
-        else if (event.keyCode == 80) { // p
+        else if (event.keyCode == 80) { // P = Pause
             this.togglePause();
         }
-        else if (event.keyCode == 115) { // F4
+        else if (event.keyCode == 70) { // F = Faster
             if ((this.level < 10) && (this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
                 this.incrementLevel();
-                this.updateLabels();
+
             }
         }
     }
@@ -580,6 +574,7 @@ class Game {
                 return function () { self.gameTimer(); };
             })(this), this.speed);
         }
+        this.updateLabels();
     }
 
     private shapeFinished() {
@@ -599,7 +594,7 @@ class Game {
             // game over!
             if (window.console) console.log("Game over");
             this.phase = Game.gameState.gameover;
-            this.showMessage("GAME OVER");
+            this.showMessage("GAME OVER\nPress F2 to Start");
             clearTimeout(this.timerToken);
         }
     }

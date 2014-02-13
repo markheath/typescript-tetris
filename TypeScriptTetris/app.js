@@ -86,7 +86,7 @@ var LShape = (function (_super) {
         this.leftHanded = leftHanded;
         if (leftHanded)
             this.fillColor = 'yellow';
-else
+        else
             this.fillColor = 'white';
 
         var x = cols / 2;
@@ -94,7 +94,7 @@ else
         this.points = [];
 
         this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x, y));
+        this.points.push(new Point(x, y)); // 1 is our base point
         this.points.push(new Point(x, y + 1));
         this.points.push(new Point(x + (leftHanded ? -1 : 1), y + 1));
     }
@@ -138,7 +138,7 @@ var StepShape = (function (_super) {
         _super.call(this);
         if (leftHanded)
             this.fillColor = 'cyan';
-else
+        else
             this.fillColor = 'magenta';
 
         this.leftHanded = leftHanded;
@@ -147,7 +147,7 @@ else
 
         this.points = [];
         this.points.push(new Point(x + (leftHanded ? 1 : -1), y));
-        this.points.push(new Point(x, y));
+        this.points.push(new Point(x, y)); // point 1 is our base point
         this.points.push(new Point(x, y - 1));
         this.points.push(new Point(x + (leftHanded ? -1 : 1), y - 1));
     }
@@ -185,7 +185,7 @@ var StraightShape = (function (_super) {
         this.points = [];
         this.points.push(new Point(x, y - 2));
         this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x, y));
+        this.points.push(new Point(x, y)); // point 2 is our base point
         this.points.push(new Point(x, y + 1));
     }
     StraightShape.prototype.rotate = function (clockwise) {
@@ -219,7 +219,7 @@ var TShape = (function (_super) {
         var x = cols / 2;
         var y = -2;
         this.points.push(new Point(x - 1, y));
-        this.points.push(new Point(x, y));
+        this.points.push(new Point(x, y)); // point 1 is our base point
         this.points.push(new Point(x + 1, y));
         this.points.push(new Point(x, y + 1));
     }
@@ -392,7 +392,7 @@ var Grid = (function () {
                     for (col = 0; col < this.cols; col++) {
                         if (r > 0)
                             this.blockColor[r][col] = this.blockColor[r - 1][col];
-else
+                        else
                             this.blockColor[r][col] = this.backColor;
                     }
                 }
@@ -428,7 +428,7 @@ var Game = (function () {
         var x = this;
         document.onkeydown = function (e) {
             x.keyhandler(e);
-        };
+        }; // gets the wrong thing as this, so capturing the right this
         this.showMessage("Press F2 to start");
     }
     Game.prototype.draw = function () {
@@ -446,21 +446,23 @@ var Game = (function () {
     };
 
     Game.prototype.newGame = function () {
-        this.messageLabel.style.display = 'none';
+        this.messageLabel.style.display = 'none'; // hide();
         this.grid.clearGrid();
         this.currentShape = this.newShape();
         this.score = 0;
         this.rowsCompleted = 0;
         this.score = 0;
         this.level = -1;
-        this.incrementLevel();
-        this.updateLabels();
+        this.speed = 1000;
         this.phase = Game.gameState.playing;
+
+        // kick off the render loop
         requestAnimFrame((function (self) {
             return function () {
                 self.draw();
             };
         })(this));
+        this.incrementLevel(); // will start the game timer & update the labels
     };
 
     Game.prototype.updateLabels = function () {
@@ -518,30 +520,20 @@ var Game = (function () {
 
         if (event.keyCode == 113) {
             this.newGame();
-
-            // loop drawScene
-            // strange code required to get the right 'this' pointer on callbacks
-            // http://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
-            this.timerToken = setInterval((function (self) {
-                return function () {
-                    self.gameTimer();
-                };
-            })(this), this.speed);
         } else if (event.keyCode == 80) {
             this.togglePause();
-        } else if (event.keyCode == 115) {
+        } else if (event.keyCode == 70) {
             if ((this.level < 10) && (this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
                 this.incrementLevel();
-                this.updateLabels();
             }
         }
     };
 
     Game.prototype.togglePause = function () {
         if (this.phase == Game.gameState.paused) {
-            this.messageLabel.style.display = 'none';
+            this.messageLabel.style.display = 'none'; // hide();
             this.phase = Game.gameState.playing;
-            this.draw();
+            this.draw(); // kick the render loop off again
         } else if (this.phase == Game.gameState.playing) {
             this.phase = Game.gameState.paused;
             this.showMessage("PAUSED");
@@ -549,7 +541,7 @@ var Game = (function () {
     };
 
     Game.prototype.showMessage = function (message) {
-        this.messageLabel.style.display = 'block';
+        this.messageLabel.style.display = 'block'; //show();
         this.messageLabel.innerText = message;
     };
 
@@ -564,6 +556,7 @@ var Game = (function () {
                 };
             })(this), this.speed);
         }
+        this.updateLabels();
     };
 
     Game.prototype.shapeFinished = function () {
@@ -579,10 +572,11 @@ var Game = (function () {
 
             this.currentShape = this.newShape();
         } else {
+            // game over!
             if (window.console)
                 console.log("Game over");
             this.phase = Game.gameState.gameover;
-            this.showMessage("GAME OVER");
+            this.showMessage("GAME OVER\nPress F2 to Start");
             clearTimeout(this.timerToken);
         }
     };
