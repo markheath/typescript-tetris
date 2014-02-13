@@ -1,0 +1,28 @@
+﻿body
+{
+    font-family: 'Segoe UI', sans-serif;
+}
+
+span {
+    font-style: italic
+}
+
+#container {
+    position: relative;
+    float: left;
+    background-color: cornflowerblue;
+}
+
+#gameCanvas {
+    height: 360px;
+    width: 240px;
+}
+
+#floatingMessage {
+    position: absolute; 
+    top: 120px; 
+    left: 60px;
+    width: 120px;
+    text-align: center;
+    background-color: azure;
+}

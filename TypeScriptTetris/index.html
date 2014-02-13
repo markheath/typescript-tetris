@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>TypeScript Tetris</title>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+</head>
+<body>
+    <h1>Typescript Tetris</h1>
+    <div><i>by Mark Heath</i></div>
+
+    <div id="container">
+        <canvas id="gameCanvas" width="240" height="360"></canvas>
+        <div id="floatingMessage"></div>
+    </div>
+    <div class="instructions">
+        <b>Keys:</b>
+        <ul>
+            <li>Left Arrow - Move shape left</li>
+            <li>Right Arrow - Move shape right</li>
+            <li>Up Arrow - Rotate shape</li>
+            <li>Down Arrow - Drop shape</li>
+            <li>P - pause / resume game</li>
+            <li>F2 - start new game</li>
+            <li>F4 - go up a level (pieces drop faster but points go up faster)</li>
+        </ul>
+    </div>
+    <div>Score: <span id="scoreLabel"></span></div>
+    <div>Level: <span id="levelLabel"></span></div>
+    <div>Rows: <span id="rowsLabel"></span></div>
+    <script src="app.min.js"></script>
+</body>
+</html>
