@@ -4,33 +4,36 @@
 <head>
     <meta charset="utf-8" />
     <title>TypeScript Tetris</title>
+    <link rel="stylesheet" href="normalize.css" type="text/css" />
     <link rel="stylesheet" href="app.css" type="text/css" />
 </head>
-<body>
-    <h1>Typescript Tetris</h1>
-    <div><i>by <a href="http://mark-dot-net.blogspot.co.uk">Mark Heath</a></i></div>
-    <a href="https://github.com/markheath/typescript-tetris"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+    <body>
+        <div id="wrapper">
+            <h1>Typescript Tetris</h1>
+            <div><i>by <a href="http://mark-dot-net.blogspot.co.uk">Mark Heath</a></i></div>
+            <a href="https://github.com/markheath/typescript-tetris"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
 
-    <div id="container">
-        <canvas id="gameCanvas" width="240" height="360"></canvas>
-        <div id="floatingMessage"></div>
-    </div>
-    <div class="instructions">
-        <b>Keys:</b>
-        <ul>
-            <li>Left Arrow - Move shape left</li>
-            <li>Right Arrow - Move shape right</li>
-            <li>Up Arrow - Rotate shape</li>
-            <li>Down Arrow - Drop shape</li>
-            <li>P - pause / resume game</li>
-            <li>F - faster</li>
-            <li>F2 - start new game</li>
-        </ul>
-        <div>Score: <span id="scoreLabel"></span></div>
-        <div>Level: <span id="levelLabel"></span></div>
-        <div>Rows: <span id="rowsLabel"></span></div>
-    </div>
+            <div id="container">
+                <canvas id="gameCanvas" width="240" height="360"></canvas>
+                <div id="floatingMessage"></div>
+            </div>
+            <div class="instructions">
+                <b>Keys:</b>
+                <ul>
+                    <li>Left Arrow - Move shape left</li>
+                    <li>Right Arrow - Move shape right</li>
+                    <li>Up Arrow - Rotate shape</li>
+                    <li>Down Arrow - Drop shape</li>
+                    <li>P - pause / resume game</li>
+                    <li>F - faster</li>
+                    <li>F2 - start new game</li>
+                </ul>
+                <div>Score: <span id="scoreLabel"></span></div>
+                <div>Level: <span id="levelLabel"></span></div>
+                <div>Rows: <span id="rowsLabel"></span></div>
+            </div>
 
-    <script src="app.js"></script>
-</body>
+        </div>
+        <script src="app.js"></script>
+    </body>
 </html>
