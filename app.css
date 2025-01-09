@@ -1,5 +1,9 @@
-﻿body
-{
+﻿#wrapper {
+    width: 800px;
+    margin: 0 auto;
+}
+
+body {
     font-family: 'Segoe UI', sans-serif;
 }
 

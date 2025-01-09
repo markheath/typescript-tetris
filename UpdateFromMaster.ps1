@@ -13,6 +13,6 @@ Move-Item TypeScriptTetris/index.html .\index.html -Force
 Remove-Item TypeScriptTetris -Recurse -Force
 
 # Commit these changes
-git commit -am "Update gh-pages from master"
+# git commit -am "Update gh-pages from master"
 # Push the changes to the remote gh-pages branch 
-git push origin gh-pages
+#git push origin gh-pages
