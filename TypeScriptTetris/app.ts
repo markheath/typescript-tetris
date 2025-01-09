@@ -1,10 +1,6 @@
 // shim layer with setTimeout fallback
 var requestAnimFrame = (function () {
     return window.requestAnimationFrame ||
-        //window.webkitRequestAnimationFrame || 
-        //window.mozRequestAnimationFrame    || 
-        //window.oRequestAnimationFrame      || 
-        window.msRequestAnimationFrame ||
         function (callback) {
             window.setTimeout(callback, 1000 / 60);
         };
@@ -22,10 +18,10 @@ class Point {
 class Shape {
     public points: Point[]; // points that make up this shape
     public rotation = 0; // what rotation 0,1,2,3
-    public fillColor;
+    public fillColor: string;
 
     private move(x: number, y: number): Point[] {
-        var newPoints = [];
+        var newPoints : Point[] = [];
 
         for (var i = 0; i < this.points.length; i++) {
             newPoints.push(new Point(this.points[i].x + x, this.points[i].y + y));
@@ -90,8 +86,8 @@ class LShape extends Shape {
         else
             this.fillColor = 'white';
 
-        var x = cols / 2;
-        var y = -2;
+        const x = cols / 2;
+        const y = -2;
         this.points = [];
 
         this.points.push(new Point(x, y - 1));
@@ -102,7 +98,7 @@ class LShape extends Shape {
 
     public rotate(clockwise: boolean): Point[] {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
-        var newPoints = [];
+        let newPoints: Point[] = [];
         switch (this.rotation) {
             case 0:
                 newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
@@ -157,7 +153,7 @@ class StepShape extends Shape {
     public rotate(clockwise: boolean): Point[] {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
 
-        var newPoints = [];
+        const newPoints: Point[] = [];
 
         switch (this.rotation) {
             case 0:
@@ -192,7 +188,7 @@ class StraightShape extends Shape {
 
     public rotate(clockwise: boolean): Point[] {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
-        var newPoints = [];
+        const newPoints : Point[] = [];
         switch (this.rotation) {
             case 0:
                 newPoints[0] = new Point(this.points[2].x, this.points[2].y - 2);
@@ -226,7 +222,7 @@ class TShape extends Shape {
 
     public rotate(clockwise: boolean): Point[] {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
-        var newPoints = [];
+        var newPoints : Point[] = [];
         switch (this.rotation) {
             case 0:
                 newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
@@ -258,7 +254,6 @@ class TShape extends Shape {
 }
 
 class Grid {
-    private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
     private rows: number;
     public cols: number;
@@ -268,9 +263,8 @@ class Grid {
     private xOffset: number;
     private yOffset: number;
 
-    constructor(rows: number, cols: number, blockSize: number, backColor, canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
-        this.context = canvas.getContext("2d");
+    constructor(rows: number, cols: number, blockSize: number, backColor, context: CanvasRenderingContext2D) {
+        this.context = context;
         this.blockSize = blockSize;
         this.blockColor = new Array(rows);
         this.backColor = backColor;
@@ -431,7 +425,7 @@ class Game {
     private speed: number; // in milliseconds
     private level: number;
     private rowsCompleted: number;
-    static gameState = { initial: 0, playing: 1, paused: 2, gameover: 3 };
+    static gameState = { initial: 0, playing: 1, paused: 2, gameOver: 3 };
     private phase = Game.gameState.initial;
     private score: number;
     private scoreLabel = <HTMLSpanElement>document.getElementById('scoreLabel');
@@ -443,12 +437,12 @@ class Game {
 
     constructor() {
         this.canvas = <HTMLCanvasElement>document.getElementById('gameCanvas');
-        this.context = this.canvas.getContext("2d");
-        this.grid = new Grid(16, 10, 20, 'gray', this.canvas);
+        this.context = this.canvas.getContext("2d") ?? (() => { throw new Error("Canvas not supported"); })(); 
+        this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
         this.speed = 1000;
         var x = this;
-        document.onkeydown = function (e) { x.keyhandler(e); }; // gets the wrong thing as this, so capturing the right this
+        document.onkeydown = function (e) { x.keyHandler(e); }; // gets the wrong thing as this, so capturing the right this
         this.showMessage("Press F2 to start");
     }
 
@@ -498,35 +492,35 @@ class Game {
         }
     }
 
-    private keyhandler(event: KeyboardEvent) {
+    private keyHandler(event: KeyboardEvent) {
         var points;
         if (this.phase == Game.gameState.playing) {
-            switch (event.keyCode) {
-                case 39: // right
+            switch (event.key) {
+                case "ArrowRight": // right
                     points = this.currentShape.moveRight();
                     break;
-                case 37: // left
+                case "ArrowLeft": // left
                     points = this.currentShape.moveLeft();
                     break;
-                case 38: // up arrow
+                case "ArrowUp": // up arrow
                     points = this.currentShape.rotate(true);
                     break;
-                case 40: // down arrow
+                case "ArrowDown": // down arrow
                     // erase ourself first
                     points = this.currentShape.drop();
                     while (this.grid.isPosValid(points)) {
                         this.currentShape.setPos(points);
                         points = this.currentShape.drop();
                     }
-
+            
                     this.shapeFinished();
                     break;
             }
 
-            switch (event.keyCode) {
-                case 39: // right
-                case 37: // left
-                case 38: // up
+            switch (event.key) {
+                case "ArrowRight": // right
+                case "ArrowLeft": // left
+                case "ArrowUp": // up
                     if (this.grid.isPosValid(points)) {
                         this.currentShape.setPos(points);
                     }
@@ -534,16 +528,13 @@ class Game {
             }
         }
 
-        if (event.keyCode == 113) { // F2
+        if (event.key === "F2") { // F2
             this.newGame();
-        }
-        else if (event.keyCode == 80) { // P = Pause
+        } else if (event.key === "p" || event.key === "P") { // P = Pause
             this.togglePause();
-        }
-        else if (event.keyCode == 70) { // F = Faster
+        } else if (event.key === "f" || event.key === "F") { // F = Faster
             if ((this.level < 10) && (this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
                 this.incrementLevel();
-
             }
         }
     }
@@ -593,7 +584,7 @@ class Game {
         else {
             // game over!
             if (window.console) console.log("Game over");
-            this.phase = Game.gameState.gameover;
+            this.phase = Game.gameState.gameOver;
             this.showMessage("GAME OVER\nPress F2 to Start");
             clearTimeout(this.timerToken);
         }
@@ -601,8 +592,8 @@ class Game {
 
     private newShape(): Shape {
         // 7 shapes
-        var randomShape = Math.floor(Math.random() * 7);
-        var newShape: Shape;
+        const randomShape = Math.floor(Math.random() * 7);
+        let newShape: Shape;
         switch (randomShape) {
             case 0:
                 newShape = new LShape(false, this.grid.cols);
@@ -625,6 +616,8 @@ class Game {
             case 6:
                 newShape = new StraightShape(this.grid.cols);
                 break;
+            default:
+                throw new Error("Unknown shape");
         }
         return newShape;
     }

@@ -1,102 +1,102 @@
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-// shim layer with setTimeout fallback
-var requestAnimFrame = (function () {
-    return window.requestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
-        window.setTimeout(callback, 1000 / 60);
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-
-var Point = (function () {
+// shim layer with setTimeout fallback
+var requestAnimFrame = (function () {
+    return window.requestAnimationFrame ||
+        function (callback) {
+            window.setTimeout(callback, 1000 / 60);
+        };
+})();
+var Point = /** @class */ (function () {
     function Point(x, y) {
         this.x = x;
         this.y = y;
     }
     return Point;
-})();
-
-var Shape = (function () {
+}());
+var Shape = /** @class */ (function () {
     function Shape() {
-        this.rotation = 0;
+        this.rotation = 0; // what rotation 0,1,2,3
     }
     Shape.prototype.move = function (x, y) {
         var newPoints = [];
-
         for (var i = 0; i < this.points.length; i++) {
             newPoints.push(new Point(this.points[i].x + x, this.points[i].y + y));
         }
         return newPoints;
     };
-
     Shape.prototype.setPos = function (newPoints) {
         this.points = newPoints;
     };
-
     // return a set of points showing where this shape would be if we dropped it one
     Shape.prototype.drop = function () {
         return this.move(0, 1);
     };
-
     // return a set of points showing where this shape would be if we moved left one
     Shape.prototype.moveLeft = function () {
         return this.move(-1, 0);
     };
-
     // return a set of points showing where this shape would be if we moved right one
     Shape.prototype.moveRight = function () {
         return this.move(1, 0);
     };
-
     // override these
     // return a set of points showing where this shape would be if we rotate it
     Shape.prototype.rotate = function (clockwise) {
         throw new Error("This method is abstract");
     };
     return Shape;
-})();
-
-var SquareShape = (function (_super) {
+}());
+var SquareShape = /** @class */ (function (_super) {
     __extends(SquareShape, _super);
     function SquareShape(cols) {
-        _super.call(this);
-        this.fillColor = 'green';
+        var _this = _super.call(this) || this;
+        _this.fillColor = 'green';
         var x = cols / 2;
         var y = -2;
-        this.points = [];
-        this.points.push(new Point(x, y));
-        this.points.push(new Point(x + 1, y));
-        this.points.push(new Point(x, y + 1));
-        this.points.push(new Point(x + 1, y + 1));
+        _this.points = [];
+        _this.points.push(new Point(x, y));
+        _this.points.push(new Point(x + 1, y));
+        _this.points.push(new Point(x, y + 1));
+        _this.points.push(new Point(x + 1, y + 1));
+        return _this;
     }
     SquareShape.prototype.rotate = function (clockwise) {
         // this shape does not rotate
         return this.points;
     };
     return SquareShape;
-})(Shape);
-
-var LShape = (function (_super) {
+}(Shape));
+var LShape = /** @class */ (function (_super) {
     __extends(LShape, _super);
     function LShape(leftHanded, cols) {
-        _super.call(this);
-        this.leftHanded = leftHanded;
+        var _this = _super.call(this) || this;
+        _this.leftHanded = leftHanded;
         if (leftHanded)
-            this.fillColor = 'yellow';
+            _this.fillColor = 'yellow';
         else
-            this.fillColor = 'white';
-
+            _this.fillColor = 'white';
         var x = cols / 2;
         var y = -2;
-        this.points = [];
-
-        this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x, y)); // 1 is our base point
-        this.points.push(new Point(x, y + 1));
-        this.points.push(new Point(x + (leftHanded ? -1 : 1), y + 1));
+        _this.points = [];
+        _this.points.push(new Point(x, y - 1));
+        _this.points.push(new Point(x, y)); // 1 is our base point
+        _this.points.push(new Point(x, y + 1));
+        _this.points.push(new Point(x + (leftHanded ? -1 : 1), y + 1));
+        return _this;
     }
     LShape.prototype.rotate = function (clockwise) {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
@@ -130,32 +130,28 @@ var LShape = (function (_super) {
         return newPoints;
     };
     return LShape;
-})(Shape);
-
-var StepShape = (function (_super) {
+}(Shape));
+var StepShape = /** @class */ (function (_super) {
     __extends(StepShape, _super);
     function StepShape(leftHanded, cols) {
-        _super.call(this);
+        var _this = _super.call(this) || this;
         if (leftHanded)
-            this.fillColor = 'cyan';
+            _this.fillColor = 'cyan';
         else
-            this.fillColor = 'magenta';
-
-        this.leftHanded = leftHanded;
+            _this.fillColor = 'magenta';
+        _this.leftHanded = leftHanded;
         var x = cols / 2;
         var y = -1;
-
-        this.points = [];
-        this.points.push(new Point(x + (leftHanded ? 1 : -1), y));
-        this.points.push(new Point(x, y)); // point 1 is our base point
-        this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x + (leftHanded ? -1 : 1), y - 1));
+        _this.points = [];
+        _this.points.push(new Point(x + (leftHanded ? 1 : -1), y));
+        _this.points.push(new Point(x, y)); // point 1 is our base point
+        _this.points.push(new Point(x, y - 1));
+        _this.points.push(new Point(x + (leftHanded ? -1 : 1), y - 1));
+        return _this;
     }
     StepShape.prototype.rotate = function (clockwise) {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
-
         var newPoints = [];
-
         switch (this.rotation) {
             case 0:
                 newPoints.push(new Point(this.points[1].x + (this.leftHanded ? 1 : -1), this.points[1].y));
@@ -173,20 +169,20 @@ var StepShape = (function (_super) {
         return newPoints;
     };
     return StepShape;
-})(Shape);
-
-var StraightShape = (function (_super) {
+}(Shape));
+var StraightShape = /** @class */ (function (_super) {
     __extends(StraightShape, _super);
     function StraightShape(cols) {
-        _super.call(this);
-        this.fillColor = 'blue';
+        var _this = _super.call(this) || this;
+        _this.fillColor = 'blue';
         var x = cols / 2;
         var y = -2;
-        this.points = [];
-        this.points.push(new Point(x, y - 2));
-        this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x, y)); // point 2 is our base point
-        this.points.push(new Point(x, y + 1));
+        _this.points = [];
+        _this.points.push(new Point(x, y - 2));
+        _this.points.push(new Point(x, y - 1));
+        _this.points.push(new Point(x, y)); // point 2 is our base point
+        _this.points.push(new Point(x, y + 1));
+        return _this;
     }
     StraightShape.prototype.rotate = function (clockwise) {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
@@ -208,20 +204,20 @@ var StraightShape = (function (_super) {
         return newPoints;
     };
     return StraightShape;
-})(Shape);
-
-var TShape = (function (_super) {
+}(Shape));
+var TShape = /** @class */ (function (_super) {
     __extends(TShape, _super);
     function TShape(cols) {
-        _super.call(this);
-        this.fillColor = 'red';
-        this.points = [];
+        var _this = _super.call(this) || this;
+        _this.fillColor = 'red';
+        _this.points = [];
         var x = cols / 2;
         var y = -2;
-        this.points.push(new Point(x - 1, y));
-        this.points.push(new Point(x, y)); // point 1 is our base point
-        this.points.push(new Point(x + 1, y));
-        this.points.push(new Point(x, y + 1));
+        _this.points.push(new Point(x - 1, y));
+        _this.points.push(new Point(x, y)); // point 1 is our base point
+        _this.points.push(new Point(x + 1, y));
+        _this.points.push(new Point(x, y + 1));
+        return _this;
     }
     TShape.prototype.rotate = function (clockwise) {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
@@ -255,12 +251,10 @@ var TShape = (function (_super) {
         return newPoints;
     };
     return TShape;
-})(Shape);
-
-var Grid = (function () {
-    function Grid(rows, cols, blockSize, backColor, canvas) {
-        this.canvas = canvas;
-        this.context = canvas.getContext("2d");
+}(Shape));
+var Grid = /** @class */ (function () {
+    function Grid(rows, cols, blockSize, backColor, context) {
+        this.context = context;
         this.blockSize = blockSize;
         this.blockColor = new Array(rows);
         this.backColor = backColor;
@@ -275,27 +269,23 @@ var Grid = (function () {
     Grid.prototype.draw = function (shape) {
         this.paintShape(shape, shape.fillColor);
     };
-
     Grid.prototype.erase = function (shape) {
         this.paintShape(shape, this.backColor);
     };
-
     Grid.prototype.paintShape = function (shape, color) {
         var _this = this;
-        shape.points.forEach(function (p) {
-            return _this.paintSquare(p.y, p.x, color);
-        });
+        shape.points.forEach(function (p) { return _this.paintSquare(p.y, p.x, color); });
     };
-
     Grid.prototype.getPreferredSize = function () {
         return new Point(this.blockSize * this.cols, this.blockSize * this.rows);
     };
-
     // check the set of points to see if they are all free
     Grid.prototype.isPosValid = function (points) {
         var valid = true;
         for (var i = 0; i < points.length; i++) {
-            if ((points[i].x < 0) || (points[i].x >= this.cols) || (points[i].y >= this.rows)) {
+            if ((points[i].x < 0) ||
+                (points[i].x >= this.cols) ||
+                (points[i].y >= this.rows)) {
                 valid = false;
                 break;
             }
@@ -308,7 +298,6 @@ var Grid = (function () {
         }
         return valid;
     };
-
     Grid.prototype.addShape = function (shape) {
         for (var i = 0; i < shape.points.length; i++) {
             if (shape.points[i].y < 0) {
@@ -319,15 +308,12 @@ var Grid = (function () {
         }
         return true;
     };
-
     Grid.prototype.eraseGrid = function () {
         this.context.fillStyle = this.backColor;
         var width = this.cols * this.blockSize;
         var height = this.rows * this.blockSize;
-
         this.context.fillRect(this.xOffset, this.yOffset, width, height);
     };
-
     Grid.prototype.clearGrid = function () {
         for (var row = 0; row < this.rows; row++) {
             for (var col = 0; col < this.cols; col++) {
@@ -336,14 +322,12 @@ var Grid = (function () {
         }
         this.eraseGrid();
     };
-
     Grid.prototype.paintSquare = function (row, col, color) {
-        if (row >= 0) {
+        if (row >= 0) { // don't paint rows that are above the grid
             this.context.fillStyle = color;
             this.context.fillRect(this.xOffset + col * this.blockSize, this.yOffset + row * this.blockSize, this.blockSize - 1, this.blockSize - 1);
         }
     };
-
     Grid.prototype.drawGrid = function () {
         for (var row = 0; row < this.rows; row++) {
             for (var col = 0; col < this.cols; col++) {
@@ -353,12 +337,10 @@ var Grid = (function () {
             }
         }
     };
-
     Grid.prototype.paint = function () {
         this.eraseGrid();
         this.drawGrid();
     };
-
     // only the rows in last shape could have been filled
     Grid.prototype.checkRows = function (lastShape) {
         var rowMin = lastShape.points[0].y;
@@ -376,7 +358,6 @@ var Grid = (function () {
         if (rowMin < 0) {
             rowMin = 0;
         }
-
         while (rowMax >= rowMin) {
             rowComplete = true;
             for (var col = 0; col < this.cols; col++) {
@@ -387,7 +368,7 @@ var Grid = (function () {
             }
             if (rowComplete) {
                 rowsRemoved++;
-
+                // shuffle down, stay on this row
                 for (var r = rowMax; r >= 0; r--) {
                     for (col = 0; col < this.cols; col++) {
                         if (r > 0)
@@ -397,12 +378,12 @@ var Grid = (function () {
                     }
                 }
                 rowMin++;
-            } else {
+            }
+            else {
                 // move up a row
                 rowMax--;
             }
         }
-
         if (rowsRemoved > 0) {
             this.eraseGrid();
             this.paint();
@@ -410,10 +391,10 @@ var Grid = (function () {
         return rowsRemoved;
     };
     return Grid;
-})();
-
-var Game = (function () {
+}());
+var Game = /** @class */ (function () {
     function Game() {
+        var _a;
         this.running = false;
         this.phase = Game.gameState.initial;
         this.scoreLabel = document.getElementById('scoreLabel');
@@ -421,30 +402,24 @@ var Game = (function () {
         this.levelLabel = document.getElementById('levelLabel');
         this.messageLabel = document.getElementById('floatingMessage');
         this.canvas = document.getElementById('gameCanvas');
-        this.context = this.canvas.getContext("2d");
-        this.grid = new Grid(16, 10, 20, 'gray', this.canvas);
+        this.context = (_a = this.canvas.getContext("2d")) !== null && _a !== void 0 ? _a : (function () { throw new Error("Canvas not supported"); })();
+        this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
         this.speed = 1000;
         var x = this;
-        document.onkeydown = function (e) {
-            x.keyhandler(e);
-        }; // gets the wrong thing as this, so capturing the right this
+        document.onkeydown = function (e) { x.keyHandler(e); }; // gets the wrong thing as this, so capturing the right this
         this.showMessage("Press F2 to start");
     }
     Game.prototype.draw = function () {
         if (this.phase == Game.gameState.playing) {
             this.grid.paint();
             this.grid.draw(this.currentShape);
-
             // recursive render loop
             requestAnimFrame((function (self) {
-                return function () {
-                    self.draw();
-                };
+                return function () { self.draw(); };
             })(this));
         }
     };
-
     Game.prototype.newGame = function () {
         this.messageLabel.style.display = 'none'; // hide();
         this.grid.clearGrid();
@@ -455,132 +430,120 @@ var Game = (function () {
         this.level = -1;
         this.speed = 1000;
         this.phase = Game.gameState.playing;
-
         // kick off the render loop
         requestAnimFrame((function (self) {
-            return function () {
-                self.draw();
-            };
+            return function () { self.draw(); };
         })(this));
         this.incrementLevel(); // will start the game timer & update the labels
     };
-
     Game.prototype.updateLabels = function () {
         this.scoreLabel.innerText = this.score.toString();
         this.rowsLabel.innerText = this.rowsCompleted.toString();
         this.levelLabel.innerText = this.level.toString();
     };
-
     Game.prototype.gameTimer = function () {
         if (this.phase == Game.gameState.playing) {
             var points = this.currentShape.drop();
             if (this.grid.isPosValid(points)) {
                 this.currentShape.setPos(points);
-            } else {
+            }
+            else {
                 this.shapeFinished();
             }
         }
     };
-
-    Game.prototype.keyhandler = function (event) {
+    Game.prototype.keyHandler = function (event) {
         var points;
         if (this.phase == Game.gameState.playing) {
-            switch (event.keyCode) {
-                case 39:
+            switch (event.key) {
+                case "ArrowRight": // right
                     points = this.currentShape.moveRight();
                     break;
-                case 37:
+                case "ArrowLeft": // left
                     points = this.currentShape.moveLeft();
                     break;
-                case 38:
+                case "ArrowUp": // up arrow
                     points = this.currentShape.rotate(true);
                     break;
-                case 40:
+                case "ArrowDown": // down arrow
                     // erase ourself first
                     points = this.currentShape.drop();
                     while (this.grid.isPosValid(points)) {
                         this.currentShape.setPos(points);
                         points = this.currentShape.drop();
                     }
-
                     this.shapeFinished();
                     break;
             }
-
-            switch (event.keyCode) {
-                case 39:
-                case 37:
-                case 38:
+            switch (event.key) {
+                case "ArrowRight": // right
+                case "ArrowLeft": // left
+                case "ArrowUp": // up
                     if (this.grid.isPosValid(points)) {
                         this.currentShape.setPos(points);
                     }
                     break;
             }
         }
-
-        if (event.keyCode == 113) {
+        if (event.key === "F2") { // F2
             this.newGame();
-        } else if (event.keyCode == 80) {
+        }
+        else if (event.key === "p" || event.key === "P") { // P = Pause
             this.togglePause();
-        } else if (event.keyCode == 70) {
+        }
+        else if (event.key === "f" || event.key === "F") { // F = Faster
             if ((this.level < 10) && (this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
                 this.incrementLevel();
             }
         }
     };
-
     Game.prototype.togglePause = function () {
         if (this.phase == Game.gameState.paused) {
             this.messageLabel.style.display = 'none'; // hide();
             this.phase = Game.gameState.playing;
             this.draw(); // kick the render loop off again
-        } else if (this.phase == Game.gameState.playing) {
+        }
+        else if (this.phase == Game.gameState.playing) {
             this.phase = Game.gameState.paused;
             this.showMessage("PAUSED");
         }
     };
-
     Game.prototype.showMessage = function (message) {
         this.messageLabel.style.display = 'block'; //show();
         this.messageLabel.innerText = message;
     };
-
     Game.prototype.incrementLevel = function () {
         this.level++;
         if (this.level < 10) {
             this.speed = 1000 - (this.level * 100);
             clearTimeout(this.timerToken);
             this.timerToken = setInterval((function (self) {
-                return function () {
-                    self.gameTimer();
-                };
+                return function () { self.gameTimer(); };
             })(this), this.speed);
         }
         this.updateLabels();
     };
-
     Game.prototype.shapeFinished = function () {
         if (this.grid.addShape(this.currentShape)) {
             this.grid.draw(this.currentShape);
-            var completed = this.grid.checkRows(this.currentShape);
+            var completed = this.grid.checkRows(this.currentShape); // and erase them
             this.rowsCompleted += completed;
             this.score += (completed * (this.level + 1) * 10);
             if (this.rowsCompleted > ((this.level + 1) * 10)) {
                 this.incrementLevel();
             }
             this.updateLabels();
-
             this.currentShape = this.newShape();
-        } else {
+        }
+        else {
             // game over!
             if (window.console)
                 console.log("Game over");
-            this.phase = Game.gameState.gameover;
+            this.phase = Game.gameState.gameOver;
             this.showMessage("GAME OVER\nPress F2 to Start");
             clearTimeout(this.timerToken);
         }
     };
-
     Game.prototype.newShape = function () {
         // 7 shapes
         var randomShape = Math.floor(Math.random() * 7);
@@ -607,20 +570,19 @@ var Game = (function () {
             case 6:
                 newShape = new StraightShape(this.grid.cols);
                 break;
+            default:
+                throw new Error("Unknown shape");
         }
         return newShape;
     };
-    Game.gameState = { initial: 0, playing: 1, paused: 2, gameover: 3 };
+    Game.gameState = { initial: 0, playing: 1, paused: 2, gameOver: 3 };
     return Game;
-})();
-
+}());
 (function () {
     "use strict";
-
     function init() {
         var game = new Game();
     }
-
     window.addEventListener('DOMContentLoaded', init, false);
 })();
 //# sourceMappingURL=app.js.map
