@@ -32,11 +32,7 @@ var Shape = /** @class */ (function () {
         this.rotation = 0; // what rotation 0,1,2,3
     }
     Shape.prototype.move = function (x, y) {
-        var newPoints = [];
-        for (var i = 0; i < this.points.length; i++) {
-            newPoints.push(new Point(this.points[i].x + x, this.points[i].y + y));
-        }
-        return newPoints;
+        return this.points.map(function (p) { return new Point(p.x + x, p.y + y); });
     };
     Shape.prototype.setPos = function (newPoints) {
         this.points = newPoints;
@@ -67,11 +63,12 @@ var SquareShape = /** @class */ (function (_super) {
         _this.fillColor = 'green';
         var x = cols / 2;
         var y = -2;
-        _this.points = [];
-        _this.points.push(new Point(x, y));
-        _this.points.push(new Point(x + 1, y));
-        _this.points.push(new Point(x, y + 1));
-        _this.points.push(new Point(x + 1, y + 1));
+        _this.points = [
+            new Point(x, y),
+            new Point(x + 1, y),
+            new Point(x, y + 1),
+            new Point(x + 1, y + 1)
+        ];
         return _this;
     }
     SquareShape.prototype.rotate = function (clockwise) {
@@ -85,49 +82,30 @@ var LShape = /** @class */ (function (_super) {
     function LShape(leftHanded, cols) {
         var _this = _super.call(this) || this;
         _this.leftHanded = leftHanded;
-        if (leftHanded)
-            _this.fillColor = 'yellow';
-        else
-            _this.fillColor = 'white';
+        _this.fillColor = leftHanded ? 'yellow' : 'white';
         var x = cols / 2;
         var y = -2;
-        _this.points = [];
-        _this.points.push(new Point(x, y - 1));
-        _this.points.push(new Point(x, y)); // 1 is our base point
-        _this.points.push(new Point(x, y + 1));
-        _this.points.push(new Point(x + (leftHanded ? -1 : 1), y + 1));
+        var offsets = [[0, -1], [0, 0], [0, 1], [leftHanded ? -1 : 1, 1]];
+        _this.points = offsets.map(function (_a) {
+            var dx = _a[0], dy = _a[1];
+            return new Point(x + dx, y + dy);
+        });
         return _this;
     }
     LShape.prototype.rotate = function (clockwise) {
-        this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
-        var newPoints = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? -1 : 1), this.points[1].y + 1));
-                break;
-            case 1:
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y + (this.leftHanded ? -1 : 1)));
-                break;
-            case 2:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? 1 : -1), this.points[1].y - 1));
-                break;
-            case 3:
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y + (this.leftHanded ? 1 : -1)));
-                break;
-        }
-        return newPoints;
+        var _this = this;
+        this.rotation = (this.rotation + (clockwise ? 1 : -1) + 4) % 4;
+        var sign = this.leftHanded ? -1 : 1;
+        var rotationOffsets = [
+            [[0, -1], [0, 0], [0, 1], [sign, 1]],
+            [[1, 0], [0, 0], [-1, 0], [-1, sign]],
+            [[0, 1], [0, 0], [0, -1], [-sign, -1]],
+            [[-1, 0], [0, 0], [1, 0], [1, -sign]]
+        ];
+        return rotationOffsets[this.rotation].map(function (_a) {
+            var dx = _a[0], dy = _a[1];
+            return new Point(_this.points[1].x + dx, _this.points[1].y + dy);
+        });
     };
     return LShape;
 }(Shape));
@@ -135,38 +113,31 @@ var StepShape = /** @class */ (function (_super) {
     __extends(StepShape, _super);
     function StepShape(leftHanded, cols) {
         var _this = _super.call(this) || this;
-        if (leftHanded)
-            _this.fillColor = 'cyan';
-        else
-            _this.fillColor = 'magenta';
+        _this.fillColor = leftHanded ? 'cyan' : 'magenta';
         _this.leftHanded = leftHanded;
         var x = cols / 2;
         var y = -1;
-        _this.points = [];
-        _this.points.push(new Point(x + (leftHanded ? 1 : -1), y));
-        _this.points.push(new Point(x, y)); // point 1 is our base point
-        _this.points.push(new Point(x, y - 1));
-        _this.points.push(new Point(x + (leftHanded ? -1 : 1), y - 1));
+        var sign = leftHanded ? 1 : -1;
+        _this.points = [
+            new Point(x + sign, y),
+            new Point(x, y), // point 1 is our base point
+            new Point(x, y - 1),
+            new Point(x - sign, y - 1)
+        ];
         return _this;
     }
     StepShape.prototype.rotate = function (clockwise) {
+        var _this = this;
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
-        var newPoints = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? 1 : -1), this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? -1 : 1), this.points[1].y - 1));
-                break;
-            case 1:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + (this.leftHanded ? 1 : -1)));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y + (this.leftHanded ? -1 : 1)));
-                break;
-        }
-        return newPoints;
+        var sign = this.leftHanded ? 1 : -1;
+        var rotationOffsets = [
+            [[sign, 0], [0, 0], [0, -1], [-sign, -1]],
+            [[0, sign], [0, 0], [1, 0], [1, -sign]]
+        ];
+        return rotationOffsets[this.rotation].map(function (_a) {
+            var dx = _a[0], dy = _a[1];
+            return new Point(_this.points[1].x + dx, _this.points[1].y + dy);
+        });
     };
     return StepShape;
 }(Shape));
@@ -177,31 +148,25 @@ var StraightShape = /** @class */ (function (_super) {
         _this.fillColor = 'blue';
         var x = cols / 2;
         var y = -2;
-        _this.points = [];
-        _this.points.push(new Point(x, y - 2));
-        _this.points.push(new Point(x, y - 1));
-        _this.points.push(new Point(x, y)); // point 2 is our base point
-        _this.points.push(new Point(x, y + 1));
+        _this.points = [
+            new Point(x, y - 2),
+            new Point(x, y - 1),
+            new Point(x, y), // point 2 is our base point
+            new Point(x, y + 1)
+        ];
         return _this;
     }
     StraightShape.prototype.rotate = function (clockwise) {
+        var _this = this;
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
-        var newPoints = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints[0] = new Point(this.points[2].x, this.points[2].y - 2);
-                newPoints[1] = new Point(this.points[2].x, this.points[2].y - 1);
-                newPoints[2] = new Point(this.points[2].x, this.points[2].y);
-                newPoints[3] = new Point(this.points[2].x, this.points[2].y + 1);
-                break;
-            case 1:
-                newPoints[0] = new Point(this.points[2].x + 2, this.points[2].y);
-                newPoints[1] = new Point(this.points[2].x + 1, this.points[2].y);
-                newPoints[2] = new Point(this.points[2].x, this.points[2].y);
-                newPoints[3] = new Point(this.points[2].x - 1, this.points[2].y);
-                break;
-        }
-        return newPoints;
+        var rotationOffsets = [
+            [[0, -2], [0, -1], [0, 0], [0, 1]], // vertical
+            [[2, 0], [1, 0], [0, 0], [-1, 0]] // horizontal
+        ];
+        return rotationOffsets[this.rotation].map(function (_a) {
+            var dx = _a[0], dy = _a[1];
+            return new Point(_this.points[2].x + dx, _this.points[2].y + dy);
+        });
     };
     return StraightShape;
 }(Shape));
@@ -210,45 +175,29 @@ var TShape = /** @class */ (function (_super) {
     function TShape(cols) {
         var _this = _super.call(this) || this;
         _this.fillColor = 'red';
-        _this.points = [];
         var x = cols / 2;
         var y = -2;
-        _this.points.push(new Point(x - 1, y));
-        _this.points.push(new Point(x, y)); // point 1 is our base point
-        _this.points.push(new Point(x + 1, y));
-        _this.points.push(new Point(x, y + 1));
+        _this.points = [
+            new Point(x - 1, y),
+            new Point(x, y), // point 1 is our base point
+            new Point(x + 1, y),
+            new Point(x, y + 1)
+        ];
         return _this;
     }
     TShape.prototype.rotate = function (clockwise) {
-        this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
-        var newPoints = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                break;
-            case 1:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                break;
-            case 2:
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                break;
-            case 3:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                break;
-        }
-        return newPoints;
+        var _this = this;
+        this.rotation = (this.rotation + (clockwise ? 1 : -1) + 4) % 4;
+        var rotationOffsets = [
+            [[-1, 0], [0, 0], [1, 0], [0, 1]], // 0 degrees
+            [[0, -1], [0, 0], [0, 1], [-1, 0]], // 90 degrees
+            [[1, 0], [0, 0], [-1, 0], [0, -1]], // 180 degrees
+            [[0, 1], [0, 0], [0, -1], [1, 0]] // 270 degrees
+        ];
+        return rotationOffsets[this.rotation].map(function (_a) {
+            var dx = _a[0], dy = _a[1];
+            return new Point(_this.points[1].x + dx, _this.points[1].y + dy);
+        });
     };
     return TShape;
 }(Shape));
@@ -370,7 +319,7 @@ var Grid = /** @class */ (function () {
                 rowsRemoved++;
                 // shuffle down, stay on this row
                 for (var r = rowMax; r >= 0; r--) {
-                    for (col = 0; col < this.cols; col++) {
+                    for (var col = 0; col < this.cols; col++) {
                         if (r > 0)
                             this.blockColor[r][col] = this.blockColor[r - 1][col];
                         else
@@ -453,7 +402,7 @@ var Game = /** @class */ (function () {
         }
     };
     Game.prototype.keyHandler = function (event) {
-        var points;
+        var points = [];
         if (this.phase == Game.gameState.playing) {
             switch (event.key) {
                 case "ArrowRight": // right
@@ -581,7 +530,7 @@ var Game = /** @class */ (function () {
 (function () {
     "use strict";
     function init() {
-        var game = new Game();
+        new Game();
     }
     window.addEventListener('DOMContentLoaded', init, false);
 })();

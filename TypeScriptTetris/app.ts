@@ -1,5 +1,5 @@
 // shim layer with setTimeout fallback
-var requestAnimFrame = (function () {
+const requestAnimFrame = (function () {
     return window.requestAnimationFrame ||
         function (callback) {
             window.setTimeout(callback, 1000 / 60);
@@ -9,7 +9,7 @@ var requestAnimFrame = (function () {
 class Point {
     public x: number;
     public y: number;
-    constructor(x, y) {
+    constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
     }
@@ -21,12 +21,7 @@ class Shape {
     public fillColor: string;
 
     private move(x: number, y: number): Point[] {
-        var newPoints : Point[] = [];
-
-        for (var i = 0; i < this.points.length; i++) {
-            newPoints.push(new Point(this.points[i].x + x, this.points[i].y + y));
-        }
-        return newPoints;
+        return this.points.map(p => new Point(p.x + x, p.y + y));
     }
 
     public setPos(newPoints: Point[]) {
@@ -60,13 +55,14 @@ class SquareShape extends Shape {
     constructor(cols: number) {
         super();
         this.fillColor = 'green';
-        var x = cols / 2;
-        var y = -2;
-        this.points = [];
-        this.points.push(new Point(x, y));
-        this.points.push(new Point(x + 1, y));
-        this.points.push(new Point(x, y + 1));
-        this.points.push(new Point(x + 1, y + 1));
+        const x = cols / 2;
+        const y = -2;
+        this.points = [
+            new Point(x, y),
+            new Point(x + 1, y),
+            new Point(x, y + 1),
+            new Point(x + 1, y + 1)
+        ];
     }
 
     public rotate(clockwise: boolean): Point[] {
@@ -81,51 +77,28 @@ class LShape extends Shape {
     constructor(leftHanded: boolean, cols: number) {
         super();
         this.leftHanded = leftHanded;
-        if (leftHanded)
-            this.fillColor = 'yellow';
-        else
-            this.fillColor = 'white';
+        this.fillColor = leftHanded ? 'yellow' : 'white';
 
         const x = cols / 2;
         const y = -2;
-        this.points = [];
-
-        this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x, y)); // 1 is our base point
-        this.points.push(new Point(x, y + 1));
-        this.points.push(new Point(x + (leftHanded ? -1 : 1), y + 1));
+        const offsets = [[0,-1], [0,0], [0,1], [leftHanded ? -1 : 1, 1]];
+        this.points = offsets.map(([dx,dy]) => new Point(x + dx, y + dy));
     }
 
     public rotate(clockwise: boolean): Point[] {
-        this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
-        let newPoints: Point[] = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? -1 : 1), this.points[1].y + 1));
-                break;
-            case 1:
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y + (this.leftHanded ? -1 : 1)));
-                break;
-            case 2:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? 1 : -1), this.points[1].y - 1));
-                break;
-            case 3:
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y + (this.leftHanded ? 1 : -1)));
-                break;
-        }
-        return newPoints;
+        this.rotation = (this.rotation + (clockwise ? 1 : -1) + 4) % 4;
+        const sign = this.leftHanded ? -1 : 1;
+    
+        const rotationOffsets = [
+            [[0, -1], [0, 0], [0, 1], [sign, 1]],
+            [[1, 0], [0, 0], [-1, 0], [-1, sign]],
+            [[0, 1], [0, 0], [0, -1], [-sign, -1]],
+            [[-1, 0], [0, 0], [1, 0], [1, -sign]]
+        ];
+    
+        return rotationOffsets[this.rotation].map(([dx, dy]) => 
+            new Point(this.points[1].x + dx, this.points[1].y + dy)
+        );
     }
 }
 
@@ -133,43 +106,34 @@ class StepShape extends Shape {
     private leftHanded: boolean;
     constructor(leftHanded: boolean, cols: number) {
         super();
-        if (leftHanded)
-            this.fillColor = 'cyan';
-        else
-            this.fillColor = 'magenta';
+        this.fillColor = leftHanded ? 'cyan' : 'magenta';
 
         this.leftHanded = leftHanded;
-        var x = cols / 2;
-        var y = -1;
+        const x = cols / 2;
+        const y = -1;
 
-        this.points = [];
-        this.points.push(new Point(x + (leftHanded ? 1 : -1), y));
-        this.points.push(new Point(x, y)); // point 1 is our base point
-        this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x + (leftHanded ? -1 : 1), y - 1));
+        const sign = leftHanded ? 1 : -1;
+        this.points = [
+            new Point(x + sign, y),     
+            new Point(x, y), // point 1 is our base point
+            new Point(x, y - 1),
+            new Point(x - sign, y - 1)
+        ];
     }
 
 
     public rotate(clockwise: boolean): Point[] {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
-
-        const newPoints: Point[] = [];
-
-        switch (this.rotation) {
-            case 0:
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? 1 : -1), this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x + (this.leftHanded ? -1 : 1), this.points[1].y - 1));
-                break;
-            case 1:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + (this.leftHanded ? 1 : -1)));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y + (this.leftHanded ? -1 : 1)));
-                break;
-        }
-        return newPoints;
+        const sign = this.leftHanded ? 1 : -1;
+        
+        const rotationOffsets = [
+            [[sign, 0], [0, 0], [0, -1], [-sign, -1]],
+            [[0, sign], [0, 0], [1, 0], [1, -sign]]
+        ];
+    
+        return rotationOffsets[this.rotation].map(([dx, dy]) => 
+            new Point(this.points[1].x + dx, this.points[1].y + dy)
+        );
     }
 }
 
@@ -177,33 +141,27 @@ class StraightShape extends Shape {
     constructor(cols: number) {
         super();
         this.fillColor = 'blue';
-        var x = cols / 2;
-        var y = -2;
-        this.points = [];
-        this.points.push(new Point(x, y - 2));
-        this.points.push(new Point(x, y - 1));
-        this.points.push(new Point(x, y)); // point 2 is our base point
-        this.points.push(new Point(x, y + 1));
+        const x = cols / 2;
+        const y = -2;
+        this.points = [
+            new Point(x, y - 2),
+            new Point(x, y - 1),
+            new Point(x, y),     // point 2 is our base point
+            new Point(x, y + 1)
+        ];
     }
 
     public rotate(clockwise: boolean): Point[] {
         this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 2;
-        const newPoints : Point[] = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints[0] = new Point(this.points[2].x, this.points[2].y - 2);
-                newPoints[1] = new Point(this.points[2].x, this.points[2].y - 1);
-                newPoints[2] = new Point(this.points[2].x, this.points[2].y);
-                newPoints[3] = new Point(this.points[2].x, this.points[2].y + 1);
-                break;
-            case 1:
-                newPoints[0] = new Point(this.points[2].x + 2, this.points[2].y);
-                newPoints[1] = new Point(this.points[2].x + 1, this.points[2].y);
-                newPoints[2] = new Point(this.points[2].x, this.points[2].y);
-                newPoints[3] = new Point(this.points[2].x - 1, this.points[2].y);
-                break;
-        }
-        return newPoints;
+        
+        const rotationOffsets = [
+            [[0, -2], [0, -1], [0, 0], [0, 1]],  // vertical
+            [[2, 0], [1, 0], [0, 0], [-1, 0]]    // horizontal
+        ];
+    
+        return rotationOffsets[this.rotation].map(([dx, dy]) => 
+            new Point(this.points[2].x + dx, this.points[2].y + dy)
+        );
     }
 }
 
@@ -211,45 +169,29 @@ class TShape extends Shape {
     constructor(cols: number) {
         super();
         this.fillColor = 'red';
-        this.points = [];
-        var x = cols / 2;
-        var y = -2;
-        this.points.push(new Point(x - 1, y));
-        this.points.push(new Point(x, y)); // point 1 is our base point
-        this.points.push(new Point(x + 1, y));
-        this.points.push(new Point(x, y + 1));
+        const x = cols / 2;
+        const y = -2;
+        this.points = [
+            new Point(x - 1, y),
+            new Point(x, y),     // point 1 is our base point
+            new Point(x + 1, y),
+            new Point(x, y + 1)
+        ];    
     }
 
     public rotate(clockwise: boolean): Point[] {
-        this.rotation = (this.rotation + (clockwise ? 1 : -1)) % 4;
-        var newPoints : Point[] = [];
-        switch (this.rotation) {
-            case 0:
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                break;
-            case 1:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                break;
-            case 2:
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x - 1, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                break;
-            case 3:
-                newPoints.push(new Point(this.points[1].x, this.points[1].y + 1));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y));
-                newPoints.push(new Point(this.points[1].x, this.points[1].y - 1));
-                newPoints.push(new Point(this.points[1].x + 1, this.points[1].y));
-                break;
-        }
-        return newPoints;
+        this.rotation = (this.rotation + (clockwise ? 1 : -1) + 4) % 4;
+        
+        const rotationOffsets = [
+            [[-1, 0], [0, 0], [1, 0], [0, 1]],   // 0 degrees
+            [[0, -1], [0, 0], [0, 1], [-1, 0]],  // 90 degrees
+            [[1, 0], [0, 0], [-1, 0], [0, -1]],  // 180 degrees
+            [[0, 1], [0, 0], [0, -1], [1, 0]]    // 270 degrees
+        ];
+    
+        return rotationOffsets[this.rotation].map(([dx, dy]) => 
+            new Point(this.points[1].x + dx, this.points[1].y + dy)
+        );
     }
 }
 
@@ -258,19 +200,19 @@ class Grid {
     private rows: number;
     public cols: number;
     public blockSize: number;
-    private blockColor: any[][];
-    public backColor: any;
+    private blockColor: string[][];
+    public backColor: string;
     private xOffset: number;
     private yOffset: number;
 
-    constructor(rows: number, cols: number, blockSize: number, backColor, context: CanvasRenderingContext2D) {
+    constructor(rows: number, cols: number, blockSize: number, backColor: string, context: CanvasRenderingContext2D) {
         this.context = context;
         this.blockSize = blockSize;
         this.blockColor = new Array(rows);
         this.backColor = backColor;
         this.cols = cols;
         this.rows = rows;
-        for (var r = 0; r < rows; r++) {
+        for (let r = 0; r < rows; r++) {
             this.blockColor[r] = new Array(cols);
         }
         this.xOffset = 20;
@@ -295,8 +237,8 @@ class Grid {
 
     // check the set of points to see if they are all free
     public isPosValid(points: Point[]) {
-        var valid: boolean = true;
-        for (var i = 0; i < points.length; i++) {
+        let valid: boolean = true;
+        for (let i = 0; i < points.length; i++) {
             if ((points[i].x < 0) ||
                 (points[i].x >= this.cols) ||
                 (points[i].y >= this.rows)) {
@@ -314,7 +256,7 @@ class Grid {
     }
 
     public addShape(shape: Shape) {
-        for (var i = 0; i < shape.points.length; i++) {
+        for (let i = 0; i < shape.points.length; i++) {
             if (shape.points[i].y < 0) {
                 // a block has landed and it isn't even fully on the grid yet
                 return false;
@@ -326,22 +268,22 @@ class Grid {
 
     public eraseGrid() {
         this.context.fillStyle = this.backColor;
-        var width = this.cols * this.blockSize;
-        var height = this.rows * this.blockSize;
+        const width = this.cols * this.blockSize;
+        const height = this.rows * this.blockSize;
 
         this.context.fillRect(this.xOffset, this.yOffset, width, height);
     }
 
     public clearGrid() {
-        for (var row = 0; row < this.rows; row++) {
-            for (var col = 0; col < this.cols; col++) {
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
                 this.blockColor[row][col] = this.backColor;
             }
         }
         this.eraseGrid();
     }
 
-    private paintSquare(row, col, color) {
+    private paintSquare(row: number, col: number, color: string) {
         if (row >= 0) { // don't paint rows that are above the grid
             this.context.fillStyle = color;
             this.context.fillRect(this.xOffset + col * this.blockSize, this.yOffset + row * this.blockSize, this.blockSize - 1, this.blockSize - 1);
@@ -349,8 +291,8 @@ class Grid {
     }
 
     public drawGrid() {
-        for (var row = 0; row < this.rows; row++) {
-            for (var col = 0; col < this.cols; col++) {
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
                 if (this.blockColor[row][col] !== this.backColor) {
                     this.paintSquare(row, col, this.blockColor[row][col]);
                 }
@@ -365,11 +307,11 @@ class Grid {
 
     // only the rows in last shape could have been filled
     public checkRows(lastShape: Shape) {
-        var rowMin = lastShape.points[0].y;
-        var rowMax = lastShape.points[0].y;
-        var rowComplete;
-        var rowsRemoved = 0;
-        for (var i = 1; i < lastShape.points.length; i++) {
+        let rowMin = lastShape.points[0].y;
+        let rowMax = lastShape.points[0].y;
+        let rowComplete: boolean;
+        let rowsRemoved = 0;
+        for (let i = 1; i < lastShape.points.length; i++) {
             if (lastShape.points[i].y < rowMin) {
                 rowMin = lastShape.points[i].y;
             }
@@ -383,7 +325,7 @@ class Grid {
 
         while (rowMax >= rowMin) {
             rowComplete = true;
-            for (var col = 0; col < this.cols; col++) {
+            for (let col = 0; col < this.cols; col++) {
                 if (this.blockColor[rowMax][col] == this.backColor) {
                     rowComplete = false;
                     break;
@@ -392,8 +334,8 @@ class Grid {
             if (rowComplete) {
                 rowsRemoved++;
                 // shuffle down, stay on this row
-                for (var r = rowMax; r >= 0; r--) {
-                    for (col = 0; col < this.cols; col++) {
+                for (let r = rowMax; r >= 0; r--) {
+                    for (let col = 0; col < this.cols; col++) {
                         if (r > 0)
                             this.blockColor[r][col] = this.blockColor[r - 1][col];
                         else
@@ -441,7 +383,7 @@ class Game {
         this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
         this.speed = 1000;
-        var x = this;
+        let x = this;
         document.onkeydown = function (e) { x.keyHandler(e); }; // gets the wrong thing as this, so capturing the right this
         this.showMessage("Press F2 to start");
     }
@@ -482,7 +424,7 @@ class Game {
 
     private gameTimer() {
         if (this.phase == Game.gameState.playing) {
-            var points = this.currentShape.drop();
+            const points = this.currentShape.drop();
             if (this.grid.isPosValid(points)) {
                 this.currentShape.setPos(points);
             }
@@ -493,7 +435,7 @@ class Game {
     }
 
     private keyHandler(event: KeyboardEvent) {
-        var points;
+        let points: Point[] = [];
         if (this.phase == Game.gameState.playing) {
             switch (event.key) {
                 case "ArrowRight": // right
@@ -571,7 +513,7 @@ class Game {
     private shapeFinished() {
         if (this.grid.addShape(this.currentShape)) {
             this.grid.draw(this.currentShape);
-            var completed = this.grid.checkRows(this.currentShape); // and erase them
+            const completed = this.grid.checkRows(this.currentShape); // and erase them
             this.rowsCompleted += completed;
             this.score += (completed * (this.level + 1) * 10);
             if (this.rowsCompleted > ((this.level + 1) * 10)) {
@@ -627,7 +569,7 @@ class Game {
     "use strict";
 
     function init() {
-        var game = new Game();
+        new Game();
     }
 
     window.addEventListener('DOMContentLoaded', init, false);
