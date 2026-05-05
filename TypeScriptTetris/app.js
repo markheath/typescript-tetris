@@ -337,9 +337,11 @@ var Grid = /** @class */ (function () {
 var Game = /** @class */ (function () {
     function Game() {
         var _a;
+        var _this = this;
         this.running = false;
         this.phase = Game.gameState.initial;
         this.paintScheduled = false;
+        this.softDrop = false;
         this.scoreLabel = document.getElementById('scoreLabel');
         this.rowsLabel = document.getElementById('rowsLabel');
         this.levelLabel = document.getElementById('levelLabel');
@@ -351,8 +353,8 @@ var Game = /** @class */ (function () {
         this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
         this.speed = 1000;
-        var x = this;
-        document.onkeydown = function (e) { x.keyHandler(e); }; // gets the wrong thing as this, so capturing the right this
+        document.addEventListener('keydown', function (e) { _this.keyHandler(e); });
+        document.addEventListener('keyup', function (e) { _this.keyUpHandler(e); });
         this.showMessage("Press F2 to start");
     }
     Game.prototype.requestPaint = function () {
@@ -376,6 +378,7 @@ var Game = /** @class */ (function () {
         this.score = 0;
         this.level = -1;
         this.speed = 1000;
+        this.softDrop = false;
         this.phase = Game.gameState.playing;
         this.requestPaint();
         this.incrementLevel(); // will start the game timer & update the labels
@@ -413,8 +416,14 @@ var Game = /** @class */ (function () {
                     points = this.currentShape.rotate(true);
                     event.preventDefault();
                     break;
-                case "ArrowDown": // down arrow
-                    // erase ourself first
+                case "ArrowDown": // soft drop (accelerated gravity while held)
+                    if (!event.repeat && !this.softDrop) {
+                        this.softDrop = true;
+                        this.restartTimer();
+                    }
+                    event.preventDefault();
+                    break;
+                case " ": // Space = hard drop
                     points = this.currentShape.drop();
                     while (this.grid.isPosValid(points)) {
                         this.currentShape.setPos(points);
@@ -452,6 +461,19 @@ var Game = /** @class */ (function () {
             }
         }
     };
+    Game.prototype.keyUpHandler = function (event) {
+        if (event.key === "ArrowDown" && this.softDrop) {
+            this.softDrop = false;
+            this.restartTimer();
+        }
+    };
+    Game.prototype.restartTimer = function () {
+        var _this = this;
+        clearInterval(this.timerToken);
+        if (this.phase != Game.gameState.playing && this.phase != Game.gameState.paused) return;
+        var tickMs = this.softDrop ? Game.softDropSpeed : this.speed;
+        this.timerToken = setInterval(function () { _this.gameTimer(); }, tickMs);
+    };
     Game.prototype.togglePause = function () {
         if (this.phase == Game.gameState.paused) {
             this.messageLabel.style.display = 'none'; // hide();
@@ -468,22 +490,18 @@ var Game = /** @class */ (function () {
         this.messageLabel.innerText = message;
     };
     Game.prototype.incrementLevel = function () {
-        var _this = this;
         this.level++;
         if (this.level < 10) {
             this.speed = 1000 - (this.level * 100);
-            clearInterval(this.timerToken);
-            this.timerToken = setInterval(function () { _this.gameTimer(); }, this.speed);
+            this.restartTimer();
         }
         this.updateLabels();
     };
     Game.prototype.decrementLevel = function () {
-        var _this = this;
         if (this.level <= 0) return;
         this.level--;
         this.speed = 1000 - (this.level * 100);
-        clearInterval(this.timerToken);
-        this.timerToken = setInterval(function () { _this.gameTimer(); }, this.speed);
+        this.restartTimer();
         this.updateLabels();
     };
     Game.prototype.shapeFinished = function () {
@@ -504,6 +522,7 @@ var Game = /** @class */ (function () {
                 console.log("Game over");
             this.phase = Game.gameState.gameOver;
             this.showMessage("GAME OVER\nPress F2 to Start");
+            this.softDrop = false;
             clearInterval(this.timerToken);
         }
     };
@@ -539,6 +558,7 @@ var Game = /** @class */ (function () {
         return newShape;
     };
     Game.gameState = { initial: 0, playing: 1, paused: 2, gameOver: 3 };
+    Game.softDropSpeed = 50;
     return Game;
 }());
 (function () {
