@@ -434,12 +434,15 @@ class Game {
             switch (event.key) {
                 case "ArrowRight": // right
                     points = this.currentShape.moveRight();
+                    event.preventDefault();
                     break;
                 case "ArrowLeft": // left
                     points = this.currentShape.moveLeft();
+                    event.preventDefault();
                     break;
                 case "ArrowUp": // up arrow
                     points = this.currentShape.rotate(true);
+                    event.preventDefault();
                     break;
                 case "ArrowDown": // down arrow
                     // erase ourself first
@@ -448,8 +451,9 @@ class Game {
                         this.currentShape.setPos(points);
                         points = this.currentShape.drop();
                     }
-            
+
                     this.shapeFinished();
+                    event.preventDefault();
                     break;
             }
 
