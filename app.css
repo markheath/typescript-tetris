@@ -23,6 +23,11 @@ body {
     font-style: italic;
 }
 
+.keys {
+    list-style: none;
+    padding: 0;
+}
+
 #floatingMessage {
     position: absolute;
     top: 120px;
