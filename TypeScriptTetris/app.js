@@ -13,13 +13,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-// shim layer with setTimeout fallback
-var requestAnimFrame = (function () {
-    return window.requestAnimationFrame ||
-        function (callback) {
-            window.setTimeout(callback, 1000 / 60);
-        };
-})();
 var Point = /** @class */ (function () {
     function Point(x, y) {
         this.x = x;
@@ -346,12 +339,15 @@ var Game = /** @class */ (function () {
         var _a;
         this.running = false;
         this.phase = Game.gameState.initial;
+        this.paintScheduled = false;
         this.scoreLabel = document.getElementById('scoreLabel');
         this.rowsLabel = document.getElementById('rowsLabel');
         this.levelLabel = document.getElementById('levelLabel');
         this.messageLabel = document.getElementById('floatingMessage');
         this.canvas = document.getElementById('gameCanvas');
-        this.context = (_a = this.canvas.getContext("2d")) !== null && _a !== void 0 ? _a : (function () { throw new Error("Canvas not supported"); })();
+        this.context = (_a = this.canvas.getContext("2d", { alpha: false })) !== null && _a !== void 0 ? _a : (function () { throw new Error("Canvas not supported"); })();
+        this.context.fillStyle = 'cornflowerblue';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
         this.speed = 1000;
@@ -359,15 +355,17 @@ var Game = /** @class */ (function () {
         document.onkeydown = function (e) { x.keyHandler(e); }; // gets the wrong thing as this, so capturing the right this
         this.showMessage("Press F2 to start");
     }
-    Game.prototype.draw = function () {
-        if (this.phase == Game.gameState.playing) {
-            this.grid.paint();
-            this.grid.draw(this.currentShape);
-            // recursive render loop
-            requestAnimFrame((function (self) {
-                return function () { self.draw(); };
-            })(this));
-        }
+    Game.prototype.requestPaint = function () {
+        var _this = this;
+        if (this.paintScheduled) return;
+        this.paintScheduled = true;
+        requestAnimationFrame(function () {
+            _this.paintScheduled = false;
+            if (_this.phase == Game.gameState.playing) {
+                _this.grid.paint();
+                _this.grid.draw(_this.currentShape);
+            }
+        });
     };
     Game.prototype.newGame = function () {
         this.messageLabel.style.display = 'none'; // hide();
@@ -379,10 +377,7 @@ var Game = /** @class */ (function () {
         this.level = -1;
         this.speed = 1000;
         this.phase = Game.gameState.playing;
-        // kick off the render loop
-        requestAnimFrame((function (self) {
-            return function () { self.draw(); };
-        })(this));
+        this.requestPaint();
         this.incrementLevel(); // will start the game timer & update the labels
     };
     Game.prototype.updateLabels = function () {
@@ -399,6 +394,7 @@ var Game = /** @class */ (function () {
             else {
                 this.shapeFinished();
             }
+            this.requestPaint();
         }
     };
     Game.prototype.keyHandler = function (event) {
@@ -433,6 +429,7 @@ var Game = /** @class */ (function () {
                     }
                     break;
             }
+            this.requestPaint();
         }
         if (event.key === "F2") { // F2
             this.newGame();
@@ -450,7 +447,7 @@ var Game = /** @class */ (function () {
         if (this.phase == Game.gameState.paused) {
             this.messageLabel.style.display = 'none'; // hide();
             this.phase = Game.gameState.playing;
-            this.draw(); // kick the render loop off again
+            this.requestPaint();
         }
         else if (this.phase == Game.gameState.playing) {
             this.phase = Game.gameState.paused;
@@ -462,13 +459,12 @@ var Game = /** @class */ (function () {
         this.messageLabel.innerText = message;
     };
     Game.prototype.incrementLevel = function () {
+        var _this = this;
         this.level++;
         if (this.level < 10) {
             this.speed = 1000 - (this.level * 100);
-            clearTimeout(this.timerToken);
-            this.timerToken = setInterval((function (self) {
-                return function () { self.gameTimer(); };
-            })(this), this.speed);
+            clearInterval(this.timerToken);
+            this.timerToken = setInterval(function () { _this.gameTimer(); }, this.speed);
         }
         this.updateLabels();
     };
@@ -490,7 +486,7 @@ var Game = /** @class */ (function () {
                 console.log("Game over");
             this.phase = Game.gameState.gameOver;
             this.showMessage("GAME OVER\nPress F2 to Start");
-            clearTimeout(this.timerToken);
+            clearInterval(this.timerToken);
         }
     };
     Game.prototype.newShape = function () {

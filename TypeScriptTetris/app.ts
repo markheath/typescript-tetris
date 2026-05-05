@@ -1,11 +1,3 @@
-// shim layer with setTimeout fallback
-const requestAnimFrame = (function () {
-    return window.requestAnimationFrame ||
-        function (callback) {
-            window.setTimeout(callback, 1000 / 60);
-        };
-})();
-
 class Point {
     public x: number;
     public y: number;
@@ -376,10 +368,13 @@ class Game {
     private messageLabel = <HTMLDivElement>document.getElementById('floatingMessage');
     private timerToken: number;
     private pausedImage: HTMLImageElement;
+    private paintScheduled = false;
 
     constructor() {
         this.canvas = <HTMLCanvasElement>document.getElementById('gameCanvas');
-        this.context = this.canvas.getContext("2d") ?? (() => { throw new Error("Canvas not supported"); })(); 
+        this.context = this.canvas.getContext("2d", { alpha: false }) ?? (() => { throw new Error("Canvas not supported"); })();
+        this.context.fillStyle = 'cornflowerblue';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
         this.speed = 1000;
@@ -388,15 +383,16 @@ class Game {
         this.showMessage("Press F2 to start");
     }
 
-    private draw() {
-        if (this.phase == Game.gameState.playing) {
-            this.grid.paint();
-            this.grid.draw(this.currentShape);
-            // recursive render loop
-            requestAnimFrame((function (self) {
-                return function () { self.draw(); };
-            })(this));
-        }
+    private requestPaint() {
+        if (this.paintScheduled) return;
+        this.paintScheduled = true;
+        requestAnimationFrame(() => {
+            this.paintScheduled = false;
+            if (this.phase == Game.gameState.playing) {
+                this.grid.paint();
+                this.grid.draw(this.currentShape);
+            }
+        });
     }
 
     private newGame() {
@@ -409,10 +405,7 @@ class Game {
         this.level = -1;
         this.speed = 1000;
         this.phase = Game.gameState.playing;
-        // kick off the render loop
-        requestAnimFrame((function (self) {
-            return function () { self.draw(); };
-        })(this));
+        this.requestPaint();
         this.incrementLevel(); // will start the game timer & update the labels
     }
 
@@ -431,6 +424,7 @@ class Game {
             else {
                 this.shapeFinished();
             }
+            this.requestPaint();
         }
     }
 
@@ -468,6 +462,7 @@ class Game {
                     }
                     break;
             }
+            this.requestPaint();
         }
 
         if (event.key === "F2") { // F2
@@ -485,7 +480,7 @@ class Game {
         if (this.phase == Game.gameState.paused) {
             this.messageLabel.style.display = 'none'; // hide();
             this.phase = Game.gameState.playing;
-            this.draw();// kick the render loop off again
+            this.requestPaint();
         }
         else if (this.phase == Game.gameState.playing) {
             this.phase = Game.gameState.paused;
@@ -502,10 +497,8 @@ class Game {
         this.level++;
         if (this.level < 10) {
             this.speed = 1000 - (this.level * 100);
-            clearTimeout(this.timerToken);
-            this.timerToken = setInterval((function (self) {
-                return function () { self.gameTimer(); };
-            })(this), this.speed);
+            clearInterval(this.timerToken);
+            this.timerToken = setInterval(() => this.gameTimer(), this.speed);
         }
         this.updateLabels();
     }
@@ -528,7 +521,7 @@ class Game {
             if (window.console) console.log("Game over");
             this.phase = Game.gameState.gameOver;
             this.showMessage("GAME OVER\nPress F2 to Start");
-            clearTimeout(this.timerToken);
+            clearInterval(this.timerToken);
         }
     }
 
