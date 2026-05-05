@@ -446,6 +446,11 @@ var Game = /** @class */ (function () {
                 this.incrementLevel();
             }
         }
+        else if (event.key === "s" || event.key === "S") { // S = Slower (secret)
+            if ((this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
+                this.decrementLevel();
+            }
+        }
     };
     Game.prototype.togglePause = function () {
         if (this.phase == Game.gameState.paused) {
@@ -470,6 +475,15 @@ var Game = /** @class */ (function () {
             clearInterval(this.timerToken);
             this.timerToken = setInterval(function () { _this.gameTimer(); }, this.speed);
         }
+        this.updateLabels();
+    };
+    Game.prototype.decrementLevel = function () {
+        var _this = this;
+        if (this.level <= 0) return;
+        this.level--;
+        this.speed = 1000 - (this.level * 100);
+        clearInterval(this.timerToken);
+        this.timerToken = setInterval(function () { _this.gameTimer(); }, this.speed);
         this.updateLabels();
     };
     Game.prototype.shapeFinished = function () {

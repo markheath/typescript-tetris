@@ -477,6 +477,10 @@ class Game {
             if ((this.level < 10) && (this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
                 this.incrementLevel();
             }
+        } else if (event.key === "s" || event.key === "S") { // S = Slower (secret)
+            if ((this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
+                this.decrementLevel();
+            }
         }
     }
 
@@ -504,6 +508,15 @@ class Game {
             clearInterval(this.timerToken);
             this.timerToken = setInterval(() => this.gameTimer(), this.speed);
         }
+        this.updateLabels();
+    }
+
+    private decrementLevel() {
+        if (this.level <= 0) return;
+        this.level--;
+        this.speed = 1000 - (this.level * 100);
+        clearInterval(this.timerToken);
+        this.timerToken = setInterval(() => this.gameTimer(), this.speed);
         this.updateLabels();
     }
 
