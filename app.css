@@ -1,15 +1,11 @@
-﻿#wrapper {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
 body {
     margin: 8px;
     font-family: 'Segoe UI', sans-serif;
 }
 
-span {
-    font-style: italic
+#wrapper {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 #container {
@@ -23,14 +19,13 @@ span {
     float: left;
 }
 
-#gameCanvas {
-    height: 360px;
-    width: 240px;
+.instructions span {
+    font-style: italic;
 }
 
 #floatingMessage {
-    position: absolute; 
-    top: 120px; 
+    position: absolute;
+    top: 120px;
     left: 60px;
     width: 120px;
     text-align: center;
