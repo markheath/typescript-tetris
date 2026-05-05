@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "none",
+    "strict": false,
+    "noImplicitAny": false,
+    "removeComments": false,
+    "sourceMap": true
+  },
+  "files": ["app.ts"]
+}

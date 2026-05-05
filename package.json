@@ -1,0 +1,13 @@
+{
+  "name": "typescript-tetris",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Basic implementation of Tetris in TypeScript",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
