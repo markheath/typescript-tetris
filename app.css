@@ -28,6 +28,22 @@ body {
     padding: 0;
 }
 
+.keys li {
+    margin: 0.3em 0;
+}
+
+.keys kbd {
+    display: inline-block;
+    min-width: 1.2em;
+    padding: 1px 6px;
+    border: 1px solid #b4b4b4;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 #b4b4b4;
+    background: #f7f7f7;
+    font-size: 0.85em;
+    text-align: center;
+}
+
 #floatingMessage {
     position: absolute;
     top: 120px;
