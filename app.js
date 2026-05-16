@@ -297,7 +297,13 @@ class Game {
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.grid = new Grid(16, 10, 20, 'gray', this.context);
         this.grid.eraseGrid();
-        this.speed = 1000;
+        // geometric ramp: each level is the same ratio faster than the last,
+        // so the perceived difficulty step is uniform (linear-in-ms is not)
+        this.speeds = [];
+        for (let l = 0; l <= Game.maxLevel; l++) {
+            this.speeds.push(Math.round(Game.slowestMs * Math.pow(Game.fastestMs / Game.slowestMs, l / Game.maxLevel)));
+        }
+        this.speed = this.speeds[0];
         document.addEventListener('keydown', e => this.keyHandler(e));
         document.addEventListener('keyup', e => this.keyUpHandler(e));
         this.showMessage("Press F2 to start");
@@ -320,13 +326,12 @@ class Game {
         this.currentShape = this.newShape();
         this.score = 0;
         this.rowsCompleted = 0;
-        this.score = 0;
-        this.level = -1;
-        this.speed = 1000;
+        this.autoLevel = 0;
+        this.manualOffset = 0;
         this.softDrop = false;
         this.phase = Game.gameState.playing;
+        this.applyLevel(); // recompute level/speed, start the timer & update labels
         this.requestPaint();
-        this.incrementLevel(); // will start the game timer & update the labels
     }
     updateLabels() {
         this.scoreLabel.innerText = this.score.toString();
@@ -396,13 +401,13 @@ class Game {
             this.togglePause();
         }
         else if (event.key === "f" || event.key === "F") { // F = Faster
-            if ((this.level < 10) && (this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
-                this.incrementLevel();
+            if ((this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
+                this.faster();
             }
         }
         else if (event.key === "s" || event.key === "S") { // S = Slower (secret)
             if ((this.phase == Game.gameState.playing) || (this.phase == Game.gameState.paused)) {
-                this.decrementLevel();
+                this.slower();
             }
         }
     }
@@ -434,31 +439,42 @@ class Game {
         this.messageLabel.style.display = 'block'; //show();
         this.messageLabel.innerText = message;
     }
-    incrementLevel() {
-        this.level++;
-        if (this.level < 10) {
-            this.speed = 1000 - (this.level * 100);
-            this.restartTimer();
-        }
-        this.updateLabels();
-    }
-    decrementLevel() {
-        if (this.level <= 0)
-            return;
-        this.level--;
-        this.speed = 1000 - (this.level * 100);
+    // recompute level from its two inputs, refresh speed, timer and labels
+    applyLevel() {
+        this.level = Math.max(0, Math.min(Game.maxLevel, this.autoLevel + this.manualOffset));
+        this.speed = this.speeds[this.level];
         this.restartTimer();
         this.updateLabels();
+    }
+    // auto progression: +1 level per 10 rows, capped (and so latched) at maxLevel.
+    // monotonic, so S/F offsets are never instantly reverted - only at the next milestone.
+    updateAutoLevel() {
+        const target = Math.min(Math.floor(this.rowsCompleted / 10), Game.maxLevel);
+        if (target > this.autoLevel) {
+            this.autoLevel = target;
+            this.applyLevel();
+        }
+    }
+    faster() {
+        if (this.level >= Game.maxLevel)
+            return;
+        this.manualOffset++;
+        this.applyLevel();
+    }
+    slower() {
+        if (this.level <= 0)
+            return;
+        this.manualOffset--;
+        this.applyLevel();
     }
     shapeFinished() {
         if (this.grid.addShape(this.currentShape)) {
             this.grid.draw(this.currentShape);
             const completed = this.grid.checkRows(this.currentShape); // and erase them
             this.rowsCompleted += completed;
-            this.score += (completed * (this.level + 1) * 10);
-            if (this.rowsCompleted > ((this.level + 1) * 10)) {
-                this.incrementLevel();
-            }
+            // BPS scoring: superlinear in lines cleared, x the level it was cleared at
+            this.score += Game.lineScores[completed] * (this.level + 1);
+            this.updateAutoLevel(); // may bump speed; independent of the score above
             this.updateLabels();
             this.currentShape = this.newShape();
         }
@@ -506,6 +522,11 @@ class Game {
 }
 Game.gameState = { initial: 0, playing: 1, paused: 2, gameOver: 3 };
 Game.softDropSpeed = 50;
+Game.maxLevel = 10;
+Game.slowestMs = 800; // level 0 drop interval
+Game.fastestMs = 120; // level maxLevel drop interval
+// BPS / Nintendo line-clear scores, indexed by lines cleared at once, x (level + 1)
+Game.lineScores = [0, 40, 100, 300, 1200];
 (function () {
     "use strict";
     function init() {

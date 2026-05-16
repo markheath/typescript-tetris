@@ -44,6 +44,12 @@ body {
     text-align: center;
 }
 
+.build {
+    margin-top: 1em;
+    color: #999;
+    font-size: 0.75em;
+}
+
 #floatingMessage {
     position: absolute;
     top: 120px;

@@ -5,7 +5,7 @@
   "description": "Basic implementation of Tetris in TypeScript",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc && node scripts/stamp.mjs"
   },
   "devDependencies": {
     "typescript": "^5.7.0"
